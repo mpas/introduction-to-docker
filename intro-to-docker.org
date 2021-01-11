@@ -1,0 +1,529 @@
+#+MACRO: color @@html:<font color="$1">$2</font>@@
+#+MACRO: set-bg-color-solid :reveal_background: $1
+#+MACRO: set-bg-color-gradient :reveal_background: linear-gradient(to right, $1, $2)
+#+MACRO: set-bg-image :reveal_background: $1
+#+MACRO: set-bg-opacity :reveal_extra_attr: data-background-opacity="$1"
+
+#+MACRO: bg-solid-red {{{set-bg-color-solid(#78281F)}}}
+#+MACRO: bg-solid-green {{{set-bg-color-solid(#0B5345)}}}
+#+MACRO: bg-solid-blue {{{set-bg-color-solid(#1B4F72)}}}
+#+MACRO: bg-solid-black {{{set-bg-color-solid(#17202A)}}}
+
+#+MACRO: bg-gradient-red {{{set-bg-color-gradient(#78281F,#B03A2E)}}}
+#+MACRO: bg-gradient-green {{{set-bg-color-gradient(#0B5345,#117A65)}}}
+#+MACRO: bg-gradient-blue {{{set-bg-color-gradient(#1B4F72,#2874A6)}}}
+#+MACRO: bg-gradient-black {{{set-bg-color-gradient(#17202A,#2C3E50)}}}
+
+#+MACRO: bg-opacity {{{set-bg-opacity(0.3)}}}
+
+#+OPTIONS: num:nil toc:nil timestamp:nil
+# --------------------------------------------------------------------------------
+# reveal js settings
+# --------------------------------------------------------------------------------
+#+REVEAL_TRANS: linear
+#+REVEAL_THEME: black
+#+REVEAL_TITLE_SLIDE:
+#+REVEAL_EXTRA_CSS: ./css/custom.css
+#+REVEAL_HEAD_PREAMBLE: <meta name="description" content="Introduction to Docker">
+#+REVEAL_POSTAMBLE: <p> Created by Marco Pas. </p>
+#+REVEAL_PLUGINS: (highlight markdown notes)
+
+# --------------------------------------------------------------------------------
+# content
+# --------------------------------------------------------------------------------
+#+Title: Introduction to Docker
+
+* Introduction to Docker
+:PROPERTIES:
+{{{set-bg-image(./images/title-slide.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+* Quick inventory
+
+- Who has never heared of Docker?
+- Who has used or is using Docker?
+
+* Goals
+
+- Learn the basics about Docker
+  + Images & containers
+  + Data storage
+  + Application stacks
+  + Docker layers
+- Use cases
+
+#+begin_quote
+If there are questions please do not hesitate to ask them!!
+#+end_quote
+
+* What is Docker?
+
+A software *_containerisation_* platform
+
+#+begin_quote
+For packaging and running applications!
+#+end_quote
+
+** What is Docker trying to solve?
+
+The famous “it works on my machine” headache!
+
+  [[./images/docker-challenge.png]]
+
+** Docker solution
+
+Create reusable platform independent packages
+
+[[./images/docker-challenge-solution.png]]
+
+** Docker vocabulary
+
+#+ATTR_REVEAL: :frag (none roll-in roll-in roll-in)
+- *_Docker image_*
+  + Blueprint of an application
+- *_Docker container_*
+  + Instance of a started image
+- *_Docker engine_*
+  + Creates, ships and runs Docker containers
+- *_Docker registry_*
+  + Storage for images
+
+** Virtual machine vs container
+
+[[./images/containers-vs-virtual-machines.jpg]]
+
+** Docker architecture
+
+[[./images/docker-architecture.png]]
+
+** Docker use cases
+
+1) Application isolation
+2) Developer productivity
+3) Rapid deployment
+4) Simplifying configuration
+5) Code pipeline management
+
+* Docker images and containers
+
+#+ATTR_REVEAL: :frag (none roll-in)
+- Image
+  + An immutable template for containers
+  + Can be created, pulled and pushed towards public and private registries
+    - e.g. [[https://hub.docker.com/search?q=&type=image][Docker Hub]]
+- Container
+  + Instance of an image
+  + Can be started, stopped, restarted
+
+** Reuse existing images
+
+#+begin_src bash
+# search for image 'hello' in registry
+$ docker search hello
+$ docker search --filter=stars=3 --no-trunc hello
+$ docker search --filter=is-official=true --no-trunc hello
+
+# docker pull <registry>:<port>/<image>:<tag>
+$ docker pull hello-world \n
+$ docker pull ubuntu        'default latest'
+$ docker pull ubuntu:latest 'equal to previous'
+$ docker pull ubuntu:14.0.4 'with tag'
+
+# list images on local system
+$ docker image ls
+
+# run an image and create a container
+$ docker run hello-world
+$ docker run ubuntu echo "hello world"
+#+end_src
+
+** Demo
+:PROPERTIES:
+{{{set-bg-image(./images/demo.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+- Search for a Docker image (cli / dockerhub)
+- Download Docker image
+- Run hello-world
+- Run ubuntu
+- Get some system information
+
+#+BEGIN_NOTES
+$ docker search hello
+
+$ docker search --filter=is-official=true --no-trunc hello
+
+$ docker pull hello-world
+
+$ docker run hello-world
+
+$ docker run ubuntu echo "hello from ubuntu"
+
+$ docker ps
+
+$ docker ps -a
+#+END_NOTES
+
+** Create your own images
+
+*_Dockerfile_*
+
+Each Dockerfile is a script (DSL), composed of various commands and arguments to perform actions on a base image in order to create a new one.
+
+#+attr_html: :width 600px
+[[./images/from-dockerfile-to-container.png]]
+
+** Dockerfile commands
+
+[[./images/dockerfile-commands.png]]
+
+** Dockerfile example 1
+
+#+begin_src dockerfile
+# file: Dockerfile
+# select a base image
+FROM tomcat:10.0.0
+
+# add a file to the image
+COPY index.html /usr/local/tomcat/webapps/ROOT/index.html
+#+end_src
+
+#+begin_src shell
+# build the image
+$ docker build --file Dockerfile --tag tomcat:test .
+# equal to (when in the Dockerfile folder!):
+# -> docker build -t tomcat-test .
+#+end_src
+
+#+begin_src shell
+# run container and publish ports
+$ docker run --publish 8080:8080 tomcat:test
+# equal to:
+# -> docker run -p 8080:8080 tomcat:test
+#+end_src
+
+** Dockerfile example 2
+
+#+begin_src dockerfile
+# select a base image
+FROM azul/zulu-openjdk:11
+
+# add a file to the image
+ADD service.jar
+
+# expose a port
+EXPOSE 8080
+
+# run the application
+CMD ["java","-jar","/service.jar"]
+#+end_src
+
+#+begin_src shell
+# build the image
+$ docker build --file Dockerfile --tag my-app:0.1 .
+#+end_src
+
+#+begin_src shell
+# run container and publish ports
+$ docker run --publish 80:8080 my-app:0.1
+#+end_src
+
+#+begin_src shell
+# ship/push the image
+$ docker push my-app:0.1
+#+end_src
+
+** Demo
+:PROPERTIES:
+{{{set-bg-image(./images/demo.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+- Build docker image
+- Run docker image (results in a container)
+- Push the docker image
+
+#+BEGIN_NOTES
+$ docker build -t marcopas/docker-intro:test .
+
+$ docker run -p 8080:8080 marcopas/docker-intro:test
+
+$ docker ps
+
+$ docker push marcopas/docker-intro:test
+#+END_NOTES
+
+** Information & cleanup
+
+#+begin_src bash
+# show running containers
+$ docker ps
+
+# show running/stopped containers
+$ docker ps -a
+
+# cleanup
+$ docker system prune -a
+$ docker container prune
+#+end_src
+
+* Docker data storage
+
+- In-container (bad idea!)
+- Bind mounts (mount to local file system)
+- Volumes (data is managed by docker)
+
+#+begin_src bash
+# start interactive docker container, mount local folder 
+$ docker run -it --rm -v $(pwd):/my-data openjdk:11-jdk bash
+
+# create volume
+$ docker volume create my-volume
+
+# list volumes
+$ docker volume ls
+
+# start docker container and use docker volume
+$ docker run -it --rm -v my-volume:/my-data alpine sh
+#+end_src
+
+** Demo
+:PROPERTIES:
+{{{set-bg-image(./images/demo.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+- Use local filesystem mount
+- Use Docker volumes
+
+#+BEGIN_NOTES
+Compile a java class on different JDK versions
+
+$ docker run -it --rm -v $(pwd):/my-data openjdk:11-jdk bash
+
+$ docker run -it --rm -v $(pwd):/my-data openjdk:14-jdk bash
+
+$ docker run -it --rm -v $(pwd):/my-data alpine sh
+
+$ touch this-is-a-new file
+
+Show that file is created on local file system
+
+$ docker volume create my-volume
+
+$ docker volume ls
+
+$ docker run -it --rm -v my-volume:/my-data alpine sh
+
+$ docker run -it --rm -v my-volume:/my-data alpine sh
+#+END_NOTES
+
+* Docker compose
+
+Managing multiple containers via the commandline is cumbersome! So we we need a way to
+easily handle multiple containers at once.
+
+** Without / With compose
+
+- Without compose
+  - build and run one container at a time
+  - manually connect containers
+- With compose
+  - define multi container stack in a file
+  - single command to start entire stack
+  - handles container dependencies
+
+** 3 Steps of compose
+
+1) Define the services that make your application stack in a Docker compose file
+
+2) (optional) Define your application environment in a Dockerfile (compose build!)
+
+3) Run the CLI:
+
+#+begin_src shell
+$ docker-compose up
+#+end_src
+
+** Compose example
+
+#+begin_src dockerfile
+version: '3.9'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    # some code omitted!!
+    volumes:
+      - db_data:/var/lib/mysql
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      # some code omitted!!
+      WORDPRESS_DB_HOST: db:3306
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+#+end_src
+
+** Compose commands
+
+#+begin_src shell
+$ docker-compose up
+$ docker-compose up -d
+$ docker-compose down
+$ docker-compose down --volumes
+#+end_src
+
+** Demo
+:PROPERTIES:
+{{{set-bg-image(./images/demo.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+- Start full stack using Docker Compose
+  + Wordpress
+  + MySql with admin tooling
+  + Using Compose to build
+
+* Docker layers
+
+- Each =build= command generates a layer
+- A complete =build= creates a SINGLE image
+
+#+attr_html: :height 300px
+[[./images/docker-image-layers.png]]
+
+** Problems with Docker build
+
+[[./images/problems-with-docker-build.png]]
+
+** Multistage build
+
+- Build the application
+- Perform static code analysis
+- Run unit tests
+- Run integration tests
+- Package application
+
+** Do we have a problem?
+
+#+begin_src dockerfile
+FROM openjdk:11-jdk
+WORKDIR /opt/app/src
+# Copies in our code and compiles
+COPY /src/*.java ./
+RUN javac *.java
+
+# Perform static code analysis
+RUN apt-get install sonar-scanner
+RUN sonar-scanner -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.projectKey=helloworld -Dsonar.sources=.
+RUN apt-get remove sonar-scanner
+
+# Run unit tests
+# Run integration tests
+
+# Create application
+RUN rm -rf /src/*.java
+CMD java HelloWorld
+#+end_src
+
+** Docker builder pattern
+
+- 2 Dockerfiles
+  - 1st for build tools
+  - 2nd for runtime
+- Drawbacks
+  - 2 Dockerfiles
+  - Orchestration needed
+
+** Docker multistage builds
+
+- Single Dockerfile with multiple stages
+- Same build!! Local and CI
+
+#+REVEAL: split
+#+begin_src dockerfile
+# Copies in our code and compiles
+FROM openjdk:11-jdk as builder
+WORKDIR /opt/app/src
+COPY /src/*.java ./
+RUN javac *.java
+
+# Perform static code analysis
+FROM sonarsource/sonar-scanner-cli as sonarqube
+WORKDIR /opt/app/src
+COPY --from=builder /opt/app/src ./
+RUN sonar-scanner -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.projectKey=helloworld -Dsonar.sources=.
+
+# Run unit tests
+# Run integration tests
+
+# Create application
+FROM openjdk:11-jdk as application
+WORKDIR /opt/app/src
+COPY --from=builder /opt/app/src/*.class ./
+CMD java HelloWorld
+#+end_src
+
+** Demo
+:PROPERTIES:
+{{{set-bg-image(./images/demo.jpg)}}}
+{{{bg-opacity}}}
+:END:
+
+- Perform multistage build
+  + Compile code
+  + Static code analysis
+  + Create image
+
+#+BEGIN_NOTES
+Start SonarQube
+
+http://localhost:9000
+
+$ docker-compose up -d
+
+$ docker run -it --rm -v $(pwd):/my-data openjdk:14-jdk bash
+
+$ docker run -it --rm -v $(pwd):/my-data alpine sh
+
+$ touch this-is-a-new file
+
+Show that file is created on local file system
+
+$ docker volume create my-volume
+
+$ docker volume ls
+
+$ docker run -it --rm -v my-volume:/my-data alpine sh
+
+$ docker run -it --rm -v my-volume:/my-data alpine sh
+#+END_NOTES
+
+* As a developer
+
+- I need to build my software
+  + Use a container
+- I need a database or something else...
+  + dont install local but use a compose file!
+- I need to run my software
+  + build using docker and run using docker
+* More information
+
+- [[https://docker-curriculum.com/][Docker Curriculum]]
+- [[https://www.docker.com/][Docker]]
+- [[https://hub.docker.com/search?q=&type=image][Docker Hub]]
+- [[https://docs.docker.com/compose/gettingstarted/][Get started with Docker Compose]]
+- [[https://docs.docker.com/compose/compose-file/][Docker Compose File Format]]
+- [[https://github.com/veggiemonk/awesome-docker][Docker Awesome]]
+
+* Questions?
