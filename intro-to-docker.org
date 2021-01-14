@@ -18,6 +18,7 @@
 
 #+OPTIONS: num:nil toc:nil timestamp:nil
 #+EXPORT_FILE_NAME: index.html
+#+OPTIONS: reveal_single_file:t
 
 # --------------------------------------------------------------------------------
 # reveal js settings
