@@ -17,7 +17,7 @@
 #+MACRO: bg-opacity {{{set-bg-opacity(0.3)}}}
 
 #+OPTIONS: num:nil toc:nil timestamp:nil
-#+OPTIONS: reveal_single_file:t
+
 # --------------------------------------------------------------------------------
 # reveal js settings
 # --------------------------------------------------------------------------------
