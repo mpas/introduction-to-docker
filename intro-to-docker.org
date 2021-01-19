@@ -41,6 +41,9 @@
 {{{set-bg-image(./images/title-slide.jpg)}}}
 {{{bg-opacity}}}
 :END:
+\\
+Source Code can be found here \\
+https://github.com/mpas/introduction-to-docker
 
 * Quick inventory
 
